@@ -15,10 +15,12 @@ from pathlib import Path
 from sklearn import preprocessing
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
+import joblib
+#from joblib import dump, load
+
 
 work_path = pathlib.Path.cwd()
 data_path = Path(work_path, 'teleCust.csv')
-
 
 telec_df = pd.read_csv(data_path)
 print(telec_df.head(10))
@@ -49,13 +51,14 @@ std_acc = np.zeros((Ks-1))
 #Find the optimal K:
     
 for n in range(1,Ks):
-        #Train Model and Predict  
+    #Train Model and Predict  
     neigh = KNeighborsClassifier(n_neighbors = n).fit(X_train,y_train)
     yhat=neigh.predict(X_test)
     mean_acc[n-1] = metrics.accuracy_score(y_test, yhat)
 
     std_acc[n-1]=np.std(yhat==y_test)/np.sqrt(yhat.shape[0])
 
+print( "The best accuracy was with", mean_acc.max(), "with k=", mean_acc.argmax()+1)
 
 plt.plot(range(1,Ks),mean_acc,'g')
 plt.fill_between(range(1,Ks),mean_acc - 1 * std_acc,mean_acc + 1 * std_acc, alpha=0.10)
@@ -66,5 +69,13 @@ plt.xlabel('Number of Neighbors (K)')
 plt.tight_layout()
 plt.show()
 
-print( "The best accuracy was with", mean_acc.max(), "with k=", mean_acc.argmax()+1) 
+#Train Model with optimal K:
+k = mean_acc.argmax()+1 
+neigh = KNeighborsClassifier(n_neighbors = k).fit(X_train,y_train)
+print(neigh)
+
+#save model neigh:
+joblib.dump(neigh,'telecom_classify_KNN_model.pkl')
+
+
 
